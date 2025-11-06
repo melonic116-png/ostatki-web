@@ -1,50 +1,121 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>Остатки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
-    table { width: 100%; border-collapse: collapse; background: white; }
-    th, td { padding: 10px; border-bottom: 1px solid #ddd; }
-    th { text-align: left; }
-    input { width: 80px; text-align: center; padding: 5px; }
-    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 10px;
+      background: #f8f9fa;
+      color: #222;
+      margin: 0;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #f1f1f1;
+      text-align: left;
+      color: #555;
+    }
+    input {
+      width: 70px;
+      padding: 5px;
+      text-align: center;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    button:hover {
+      background: #218838;
+    }
+    .container {
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+      margin-bottom: 60px;
+    }
   </style>
 </head>
 <body>
   <h2>📋 Остатки</h2>
-  <table id="table"></table>
+  <div class="container">
+    <table id="table">
+      <thead>
+        <tr><th>Наименование</th><th>Кол-во</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
   <button id="save">✅ Сохранить</button>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Пример данных (в будущем бот подставит реальные)
-    const items = [
-      {name: "Булочка Бургер", qty: 0},
-      {name: "Айсберг капуста", qty: 0},
-      {name: "Помидоры", qty: 0}
-    ];
+    let items = [];
 
-    const table = document.getElementById("table");
+    // Загружаем данные, переданные ботом
+    if (tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+      try {
+        items = JSON.parse(decodeURIComponent(tg.initDataUnsafe.start_param));
+      } catch (e) {
+        console.error("Ошибка загрузки данных:", e);
+      }
+    }
+
+    // Если бот не передал данные — показываем заглушку
+    if (!items.length) {
+      items = [{name: "Нет данных (проверь подключение к боту)", qty: 0}];
+    }
+
+    const tbody = document.querySelector("#table tbody");
     items.forEach(item => {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td>${item.name}</td><td><input type="number" value="${item.qty}" /></td>`;
-      table.appendChild(row);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.name}</td>
+        <td><input type="number" value="${item.qty}" /></td>
+      `;
+      tbody.appendChild(tr);
     });
 
     document.getElementById("save").addEventListener("click", () => {
-      const rows = document.querySelectorAll("tr");
       const result = [];
-      rows.forEach(r => {
-        const name = r.children[0].innerText;
-        const qty = parseFloat(r.children[1].querySelector("input").value) || 0;
+      document.querySelectorAll("tbody tr").forEach(row => {
+        const name = row.children[0].innerText.trim();
+        const qty = parseFloat(row.children[1].querySelector("input").value) || 0;
         result.push({name, qty});
       });
-      tg.sendData(JSON.stringify(result)); // отправляем результат в бот
+      tg.sendData(JSON.stringify(result));
       tg.close();
     });
   </script>
