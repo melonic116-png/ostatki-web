@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Остатки</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; }
+    th { text-align: left; }
+    input { width: 80px; text-align: center; padding: 5px; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>📋 Остатки</h2>
+  <table id="table"></table>
+  <button id="save">✅ Сохранить</button>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Пример данных (в будущем бот подставит реальные)
+    const items = [
+      {name: "Булочка Бургер", qty: 0},
+      {name: "Айсберг капуста", qty: 0},
+      {name: "Помидоры", qty: 0}
+    ];
+
+    const table = document.getElementById("table");
+    items.forEach(item => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${item.name}</td><td><input type="number" value="${item.qty}" /></td>`;
+      table.appendChild(row);
+    });
+
+    document.getElementById("save").addEventListener("click", () => {
+      const rows = document.querySelectorAll("tr");
+      const result = [];
+      rows.forEach(r => {
+        const name = r.children[0].innerText;
+        const qty = parseFloat(r.children[1].querySelector("input").value) || 0;
+        result.push({name, qty});
+      });
+      tg.sendData(JSON.stringify(result)); // отправляем результат в бот
+      tg.close();
+    });
+  </script>
+</body>
+</html>
