@@ -84,7 +84,6 @@
 
     async function loadData() {
       try {
-        // ⚙️ Загружаем JSON-файл, который создаёт бот
         const response = await fetch('https://melonic116-png.github.io/ostatki-web/webapp_data.json?' + Date.now());
         const data = await response.json();
         renderTable(data);
@@ -114,8 +113,15 @@
         const qty = parseFloat(row.children[1].querySelector("input").value) || 0;
         result.push({name, qty});
       });
-      tg.sendData(JSON.stringify(result));
-      tg.close();
+
+      // Попытка передать через Telegram WebApp API
+      try {
+        tg.sendData(JSON.stringify(result));
+        tg.close();
+      } catch (err) {
+        alert("📤 Telegram WebApp API недоступен.\n\nСкопируй эти данные и отправь их вручную боту.");
+        console.log(result);
+      }
     });
 
     loadData();
