@@ -1,10 +1,14 @@
 <script>
 async function loadProducts() {
   try {
-    console.log("🚀 Загружаем товары...");
-    const response = await fetch('./webapp_data.json?nocache=' + new Date().getTime());
-    if (!response.ok) throw new Error("Файл webapp_data.json не найден");
+    console.log("🔄 Загружаем webapp_data.json...");
+    const response = await fetch("./webapp_data.json?nocache=" + Date.now(), {
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    if (!response.ok) throw new Error("Не удалось загрузить JSON");
+
     const products = await response.json();
+    console.log("✅ Загружено товаров:", products.length);
 
     const tbody = document.getElementById("table-body");
     tbody.innerHTML = "";
@@ -27,17 +31,18 @@ async function loadProducts() {
       tbody.appendChild(row);
     });
   } catch (error) {
-    console.error("Ошибка загрузки:", error);
+    console.error("Ошибка загрузки JSON:", error);
     document.getElementById("table-body").innerHTML =
-      '<tr><td colspan="2" style="color:red;">Ошибка загрузки данных</td></tr>';
+      '<tr><td colspan="2" style="color:red;">❌ Ошибка загрузки данных</td></tr>';
   }
 }
 
+// загружаем при старте
 loadProducts();
 
+// обработка формы
 document.querySelector("form").addEventListener("submit", e => {
   e.preventDefault();
-
   const rows = document.querySelectorAll("#table-body tr");
   const result = [];
 
@@ -49,6 +54,6 @@ document.querySelector("form").addEventListener("submit", e => {
 
   const json = JSON.stringify(result, null, 2);
   navigator.clipboard.writeText(json);
-  alert("✅ JSON скопирован в буфер обмена. Вставь его в чат бота и отправь.");
+  alert("✅ JSON скопирован в буфер обмена. Вставь его в чат бота.");
 });
 </script>
