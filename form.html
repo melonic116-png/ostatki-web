@@ -1,63 +1,55 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Остатки</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: sans-serif; background: #fafafa; color: #222; text-align: center; margin: 20px; }
-    table { width: 90%; margin: 0 auto; border-collapse: collapse; background: white; border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    th, td { padding: 10px; border-bottom: 1px solid #eee; }
-    th { background: #f0f0f0; }
-    input[type="number"] { width: 70px; text-align: center; border: 1px solid #ccc; border-radius: 5px; }
-    button { background: #16a34a; color: white; border: none; padding: 10px 20px; margin-top: 15px; font-size: 16px;
-             border-radius: 8px; cursor: pointer; }
-    button:hover { background: #15803d; }
-  </style>
-</head>
-<body>
-  <h2>📋 Остатки</h2>
-  <p>Готово — можно вносить остатки.</p>
-  <form id="form">
-    <table>
-      <thead><tr><th>Наименование</th><th>Кол-во</th></tr></thead>
-      <tbody id="table-body"></tbody>
-    </table>
-    <button type="submit">💾 Сохранить</button>
-  </form>
-
-  <script>
-    const products = [
-      "Айсберг капуста",
-      "Бекон говяжий нарезка ГП П/Ф",
-      "Булочка Бургер",
-      "Булочка Бургер Мини",
-      "Булочка Бургер Черная",
-      "Булочка хот дог",
-      "Грибы жаренные ГП П/Ф",
-      "Картофель Фри",
-      "Соус Цезарь",
-      "Сыр Чеддер"
-    ];
+<script>
+async function loadProducts() {
+  try {
+    // Загружаем JSON со списком товаров
+    const response = await fetch('webapp_data.json?nocache=' + new Date().getTime());
+    const products = await response.json();
 
     const tbody = document.getElementById("table-body");
-    products.forEach(name => {
+    tbody.innerHTML = "";
+
+    products.forEach(item => {
       const row = document.createElement("tr");
-      row.innerHTML = `<td>${name}</td><td><input type="number" name="${name}" value=""></td>`;
+
+      const nameCell = document.createElement("td");
+      nameCell.textContent = item.name;
+
+      const qtyCell = document.createElement("td");
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = "0";
+      input.value = item.qty || "";
+      qtyCell.appendChild(input);
+
+      row.appendChild(nameCell);
+      row.appendChild(qtyCell);
       tbody.appendChild(row);
     });
+  } catch (error) {
+    console.error("Ошибка загрузки JSON:", error);
+    document.getElementById("table-body").innerHTML =
+      '<tr><td colspan="2" style="color:red;">Ошибка загрузки данных</td></tr>';
+  }
+}
 
-    document.getElementById("form").addEventListener("submit", e => {
-      e.preventDefault();
-      const data = [];
-      document.querySelectorAll("input").forEach(input => {
-        data.push({ name: input.name, qty: input.value ? parseFloat(input.value) : 0 });
-      });
-      const json = JSON.stringify(data, null, 2);
-      if (window.Telegram?.WebApp) Telegram.WebApp.sendData(json);
-      else { alert("JSON скопирован. Вставь в чат бота."); navigator.clipboard.writeText(json); }
-    });
-  </script>
-</body>
-</html>
+// Загружаем список при открытии формы
+loadProducts();
+
+// Отправка данных
+document.querySelector("form").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const rows = document.querySelectorAll("#table-body tr");
+  const result = [];
+
+  rows.forEach(row => {
+    const name = row.children[0].textContent.trim();
+    const qty = row.children[1].children[0].value || "0";
+    result.push({ name, qty: Number(qty) });
+  });
+
+  const json = JSON.stringify(result, null, 2);
+  navigator.clipboard.writeText(json);
+  alert("JSON скопирован в буфер обмена. Вставь его в чат бота и отправь.");
+});
+</script>
