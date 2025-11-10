@@ -1,8 +1,9 @@
 <script>
 async function loadProducts() {
   try {
-    // Загружаем JSON со списком товаров
-    const response = await fetch('webapp_data.json?nocache=' + new Date().getTime());
+    console.log("🚀 Загружаем товары...");
+    const response = await fetch('./webapp_data.json?nocache=' + new Date().getTime());
+    if (!response.ok) throw new Error("Файл webapp_data.json не найден");
     const products = await response.json();
 
     const tbody = document.getElementById("table-body");
@@ -26,16 +27,14 @@ async function loadProducts() {
       tbody.appendChild(row);
     });
   } catch (error) {
-    console.error("Ошибка загрузки JSON:", error);
+    console.error("Ошибка загрузки:", error);
     document.getElementById("table-body").innerHTML =
       '<tr><td colspan="2" style="color:red;">Ошибка загрузки данных</td></tr>';
   }
 }
 
-// Загружаем список при открытии формы
 loadProducts();
 
-// Отправка данных
 document.querySelector("form").addEventListener("submit", e => {
   e.preventDefault();
 
@@ -50,6 +49,6 @@ document.querySelector("form").addEventListener("submit", e => {
 
   const json = JSON.stringify(result, null, 2);
   navigator.clipboard.writeText(json);
-  alert("JSON скопирован в буфер обмена. Вставь его в чат бота и отправь.");
+  alert("✅ JSON скопирован в буфер обмена. Вставь его в чат бота и отправь.");
 });
 </script>
