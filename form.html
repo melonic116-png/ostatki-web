@@ -1,19 +1,60 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Остатки</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-  body{font-family:system-ui,Arial; padding:14px; background:#f4f6f8; color:#111}
-  h2{text-align:center}
-  table{width:100%;border-collapse:collapse;background:#fff;margin-top:10px;border-radius:8px;overflow:hidden}
-  th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-  input{width:90px;padding:6px;text-align:center}
-  button{display:block;width:100%;padding:12px;margin-top:12px;border-radius:8px;border:none;font-size:16px;cursor:pointer;background:#28a745;color:#fff}
-  .hint{font-size:13px;color:#444;margin-top:8px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Остатки</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: system-ui, Arial;
+      padding: 14px;
+      background: #f4f6f8;
+      color: #111;
+    }
+    h2 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-top: 10px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    input {
+      width: 90px;
+      padding: 6px;
+      text-align: center;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      background: #28a745;
+      color: #fff;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .hint {
+      font-size: 13px;
+      color: #444;
+      margin-top: 8px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <h2>📋 Остатки</h2>
@@ -21,76 +62,113 @@
   <div id="status" style="margin-bottom:8px">Загрузка...</div>
 
   <table id="tbl">
-    <thead><tr><th>Наименование</th><th>Кол-во</th></tr></thead>
+    <thead>
+      <tr><th>Наименование</th><th>Кол-во</th></tr>
+    </thead>
     <tbody></tbody>
   </table>
 
   <button id="saveBtn">✅ Сохранить</button>
-  <div class="hint">Если WebApp API недоступен — нажми «Сохранить», JSON будет в буфере для вставки в чат бота.</div>
+  <div class="hint">
+    Если WebApp API недоступен — нажми «Сохранить», JSON будет скопирован в буфер обмена для вставки в чат бота.
+  </div>
 
-<script>
-  const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  if (TG && typeof TG.ready === 'function') { TG.ready(); TG.expand(); }
-
-  // список по умолчанию (в случае, если webapp_data.json не доступен)
-  const fallback = [
-    "Булочка Бургер","Айсберг капуста","Помидоры","Огурцы",
-    "Соус Цезарь","Сыр Чеддер","Котлета говяжья","Картофель Фри"
-  ];
-
-  async function loadData() {
-    const tbody = document.querySelector('#tbl tbody');
-    let data = [];
-    try {
-      // попробуем загрузить локальный webapp_data.json (тот, который генерирует бот)
-      const resp = await fetch(location.origin + '/webapp_data.json');
-      if (resp.ok) {
-        data = await resp.json();
-      } else {
-        // пробуем внешнюю ссылку (fallback на репозиторий), если есть
-        data = fallback.map(n => ({ name: n, qty: null }));
-      }
-    } catch (e) {
-      data = fallback.map(n => ({ name: n, qty: null }));
+  <script>
+    const TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    if (TG && typeof TG.ready === 'function') {
+      TG.ready();
+      TG.expand();
     }
 
-    // заполним таблицу — НИКОГДА не подставляем 0 как значение по умолчанию.
-    tbody.innerHTML = '';
-    data.forEach(item => {
-      const name = item.name || '';
-      // если qty отсутствует или равен 0 или null -> оставляем поле пустым
-      const showVal = (item.qty !== undefined && item.qty !== null && item.qty !== 0) ? item.qty : '';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${name}</td><td><input type="number" min="0" value="${showVal}" data-name="${escapeHtml(name)}" placeholder=""></td>`;
-      tbody.appendChild(tr);
-    });
+    async function loadData() {
+      const tbody = document.querySelector('#tbl tbody');
+      let data = [];
 
-    document.getElementById('status').innerText = 'Готово — внеси числа и нажми «Сохранить»';
-  }
+      try {
+        // Загружаем webapp_data.json из текущей папки
+        const resp = await fetch('./webapp_data.json');
+        if (resp.ok) {
+          data = await resp.json();
+        } else {
+          throw new Error('webapp_data.json не найден');
+        }
+      } catch (e) {
+        console.warn('⚠️ Ошибка загрузки webapp_data.json:', e);
+        data = [
+          { name: "Булочка Бургер", qty: "" },
+          { name: "Айсберг капуста", qty: "" },
+          { name: "Помидоры", qty: "" },
+          { name: "Огурцы", qty: "" }
+        ];
+      }
 
-  function escapeHtml(str) {
-    return str.replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-  }
+      // Заполняем таблицу
+      tbody.innerHTML = '';
+      data.forEach(item => {
+        const name = item.name || '';
+        const showVal = item.qty || '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(name)}</td>
+          <td><input type="number" min="0" value="${showVal}" 
+              data-name="${escapeHtml(name)}" placeholder=""></td>`;
+        tbody.appendChild(tr);
+      });
 
-  document.getElementById('saveBtn').addEventListener('click', async () => {
-    const rows = Array.from(document.querySelectorAll('#tbl tbody tr'));
-    const out = rows.map(r => ({ name: r.querySelector('input').dataset.name, qty: Number(r.querySelector('input').value) || 0 }));
-    const payload = JSON.stringify(out);
-    if (TG && typeof TG.sendData === 'function') {
-      TG.sendData(payload);
-      TG.close();
-    } else {
-      // копируем в буфер обмена и покажем подсказку
+      document.getElementById('status').innerText = 'Готово — можно вносить остатки.';
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (m) => (
+        { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]
+      ));
+    }
+
+    async function doSend(payload) {
+      // 1️⃣ Если Telegram WebApp доступен — отправляем туда
+      if (TG && typeof TG.sendData === 'function') {
+        try {
+          TG.sendData(payload);
+          TG.close();
+          return;
+        } catch (e) {
+          console.warn('Ошибка Telegram sendData:', e);
+        }
+      }
+
+      // 2️⃣ Если нет Telegram API — копируем или показываем JSON
       try {
         await navigator.clipboard.writeText(payload);
-        alert('JSON скопирован в буфер. Вставь его в чат бота и отправь.');
-      } catch (e) {
-        prompt('Скопируй JSON и вставь его в чат бота:', payload);
+        alert("✅ JSON скопирован в буфер.\nТеперь вставь его (Ctrl+V) в чат бота.");
+      } catch (err) {
+        console.warn('Clipboard API не разрешён, fallback:', err);
+        try {
+          const textArea = document.createElement("textarea");
+          textArea.value = payload;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+          alert("✅ JSON скопирован альтернативным способом.\nЕсли не сработало — появится окно ниже.");
+        } catch (e2) {
+          console.warn('execCommand не сработал:', e2);
+          prompt("Скопируй JSON вручную и вставь в Telegram:", payload);
+        }
       }
     }
-  });
 
-  loadData();
-</script>
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const rows = Array.from(document.querySelectorAll('#tbl tbody tr'));
+      const out = rows.map(r => {
+        const inp = r.querySelector('input');
+        return { name: inp.dataset.name, qty: Number(inp.value) || 0 };
+      });
+
+      const payload = JSON.stringify(out, null, 2);
+      await doSend(payload);
+    });
+
+    loadData();
+  </script>
 </body>
 </html>
