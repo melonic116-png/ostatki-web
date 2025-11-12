@@ -12,8 +12,14 @@
       background: #f4f6f8;
       color: #111;
     }
-    h2 {
-      text-align: center;
+    h2 { text-align: center; margin-bottom: 10px; }
+    #searchBox {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      margin-bottom: 10px;
     }
     table {
       width: 100%;
@@ -28,7 +34,7 @@
       border-bottom: 1px solid #eee;
       text-align: left;
     }
-    input {
+    input[type="number"] {
       width: 90px;
       padding: 6px;
       text-align: center;
@@ -45,9 +51,7 @@
       background: #28a745;
       color: #fff;
     }
-    button:hover {
-      background: #218838;
-    }
+    button:hover { background: #218838; }
     .hint {
       font-size: 13px;
       color: #444;
@@ -58,6 +62,7 @@
 </head>
 <body>
   <h2>📋 Остатки</h2>
+  <input id="searchBox" type="text" placeholder="🔍 Поиск по наименованию..." />
 
   <div id="status" style="margin-bottom:8px">Загрузка...</div>
 
@@ -70,31 +75,26 @@
 
   <button id="saveBtn">✅ Сохранить</button>
   <div class="hint">
-    Если WebApp API недоступен — нажми «Сохранить», JSON будет скопирован в буфер обмена для вставки в чат бота.
+    Если WebApp API недоступен — нажми «Сохранить», JSON будет скопирован в буфер для вставки в чат бота.
   </div>
 
   <script>
     const TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-    if (TG && typeof TG.ready === 'function') {
-      TG.ready();
-      TG.expand();
-    }
+    if (TG && typeof TG.ready === 'function') { TG.ready(); TG.expand(); }
+
+    let allData = []; // храним все строки
 
     async function loadData() {
       const tbody = document.querySelector('#tbl tbody');
-      let data = [];
-
       try {
-        // Загружаем webapp_data.json из текущей папки
         const resp = await fetch('./webapp_data.json');
-        if (resp.ok) {
-          data = await resp.json();
-        } else {
-          throw new Error('webapp_data.json не найден');
-        }
-      } catch (e) {
-        console.warn('⚠️ Ошибка загрузки webapp_data.json:', e);
-        data = [
+        allData = resp.ok ? await resp.json() : [];
+      } catch {
+        allData = [];
+      }
+
+      if (!allData.length) {
+        allData = [
           { name: "Булочка Бургер", qty: "" },
           { name: "Айсберг капуста", qty: "" },
           { name: "Помидоры", qty: "" },
@@ -102,7 +102,12 @@
         ];
       }
 
-      // Заполняем таблицу
+      renderTable(allData);
+      document.getElementById('status').innerText = 'Готово — можно вносить остатки.';
+    }
+
+    function renderTable(data) {
+      const tbody = document.querySelector('#tbl tbody');
       tbody.innerHTML = '';
       data.forEach(item => {
         const name = item.name || '';
@@ -114,8 +119,6 @@
               data-name="${escapeHtml(name)}" placeholder=""></td>`;
         tbody.appendChild(tr);
       });
-
-      document.getElementById('status').innerText = 'Готово — можно вносить остатки.';
     }
 
     function escapeHtml(str) {
@@ -125,35 +128,19 @@
     }
 
     async function doSend(payload) {
-      // 1️⃣ Если Telegram WebApp доступен — отправляем туда
       if (TG && typeof TG.sendData === 'function') {
         try {
           TG.sendData(payload);
           TG.close();
           return;
-        } catch (e) {
-          console.warn('Ошибка Telegram sendData:', e);
-        }
+        } catch (e) { console.warn('Ошибка Telegram sendData:', e); }
       }
 
-      // 2️⃣ Если нет Telegram API — копируем или показываем JSON
       try {
         await navigator.clipboard.writeText(payload);
         alert("✅ JSON скопирован в буфер.\nТеперь вставь его (Ctrl+V) в чат бота.");
-      } catch (err) {
-        console.warn('Clipboard API не разрешён, fallback:', err);
-        try {
-          const textArea = document.createElement("textarea");
-          textArea.value = payload;
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand("copy");
-          document.body.removeChild(textArea);
-          alert("✅ JSON скопирован альтернативным способом.\nЕсли не сработало — появится окно ниже.");
-        } catch (e2) {
-          console.warn('execCommand не сработал:', e2);
-          prompt("Скопируй JSON вручную и вставь в Telegram:", payload);
-        }
+      } catch {
+        prompt("Скопируй JSON вручную и вставь в Telegram:", payload);
       }
     }
 
@@ -163,9 +150,15 @@
         const inp = r.querySelector('input');
         return { name: inp.dataset.name, qty: Number(inp.value) || 0 };
       });
-
       const payload = JSON.stringify(out, null, 2);
       await doSend(payload);
+    });
+
+    // 🔍 фильтрация при вводе
+    document.getElementById('searchBox').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = allData.filter(it => it.name.toLowerCase().includes(term));
+      renderTable(filtered);
     });
 
     loadData();
