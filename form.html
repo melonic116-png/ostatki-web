@@ -82,7 +82,8 @@
     const TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
     if (TG && typeof TG.ready === 'function') { TG.ready(); TG.expand(); }
 
-    let allData = []; // храним все строки
+    let allData = []; // все строки
+    let currentValues = {}; // хранение введённых количеств
 
     async function loadData() {
       const tbody = document.querySelector('#tbl tbody');
@@ -102,6 +103,11 @@
         ];
       }
 
+      // При первой загрузке инициализируем currentValues
+      allData.forEach(item => {
+        currentValues[item.name] = item.qty || "";
+      });
+
       renderTable(allData);
       document.getElementById('status').innerText = 'Готово — можно вносить остатки.';
     }
@@ -111,13 +117,21 @@
       tbody.innerHTML = '';
       data.forEach(item => {
         const name = item.name || '';
-        const showVal = item.qty || '';
+        const showVal = currentValues[name] ?? "";
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${escapeHtml(name)}</td>
           <td><input type="number" min="0" value="${showVal}" 
               data-name="${escapeHtml(name)}" placeholder=""></td>`;
         tbody.appendChild(tr);
+      });
+
+      // Обновляем currentValues при изменении значений
+      document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('input', e => {
+          const name = e.target.dataset.name;
+          currentValues[name] = e.target.value;
+        });
       });
     }
 
@@ -145,11 +159,10 @@
     }
 
     document.getElementById('saveBtn').addEventListener('click', async () => {
-      const rows = Array.from(document.querySelectorAll('#tbl tbody tr'));
-      const out = rows.map(r => {
-        const inp = r.querySelector('input');
-        return { name: inp.dataset.name, qty: Number(inp.value) || 0 };
-      });
+      const out = allData.map(it => ({
+        name: it.name,
+        qty: Number(currentValues[it.name]) || 0
+      }));
       const payload = JSON.stringify(out, null, 2);
       await doSend(payload);
     });
