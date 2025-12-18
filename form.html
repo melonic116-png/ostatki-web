@@ -1,180 +1,55 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Остатки</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      font-family: system-ui, Arial;
-      padding: 14px;
-      background: #f4f6f8;
-      color: #111;
-    }
-    h2 { text-align: center; margin-bottom: 10px; }
-    #searchBox {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      margin-top: 10px;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
-    input[type="number"] {
-      width: 90px;
-      padding: 6px;
-      text-align: center;
-    }
-    button {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin-top: 12px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      background: #28a745;
-      color: #fff;
-    }
-    button:hover { background: #218838; }
-    .hint {
-      font-size: 13px;
-      color: #444;
-      margin-top: 8px;
-      text-align: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Остатки</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <h2>📋 Остатки</h2>
-  <input id="searchBox" type="text" placeholder="🔍 Поиск по наименованию..." />
+<h2 id="title"></h2>
+<table id="tbl"></table>
+<button onclick="save()">Сохранить</button>
 
-  <div id="status" style="margin-bottom:8px">Загрузка...</div>
+<script>
+const TG = Telegram.WebApp;
+TG.expand();
 
-  <table id="tbl">
-    <thead>
-      <tr><th>Наименование</th><th>Кол-во</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+const params = new URLSearchParams(window.location.search);
+const GROUP = params.get("group") || "kitchen";
+document.getElementById("title").innerText = GROUP === "kitchen" ? "Кухня" : "Бар";
 
-  <button id="saveBtn">✅ Сохранить</button>
-  <div class="hint">
-    Если WebApp API недоступен — нажми «Сохранить», JSON будет скопирован в буфер для вставки в чат бота.
-  </div>
+let data = [];
 
-  <script>
-    const TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-    if (TG && typeof TG.ready === 'function') { TG.ready(); TG.expand(); }
+fetch(`webapp_data_${GROUP}.json`)
+  .then(r => r.json())
+  .then(j => {
+    data = j;
+    render();
+  });
 
-    let allData = []; // все строки
-    let currentValues = {}; // хранение введённых количеств
+function render(){
+  const tbl = document.getElementById("tbl");
+  tbl.innerHTML = "";
+  data.forEach(i => {
+    const r = document.createElement("tr");
+    r.innerHTML = `<td>${i.name}</td><td><input type="number" value="${i.qty || ""}"></td>`;
+    tbl.appendChild(r);
+  });
+}
 
-    async function loadData() {
-      const tbody = document.querySelector('#tbl tbody');
-      try {
-        const resp = await fetch('./webapp_data.json');
-        allData = resp.ok ? await resp.json() : [];
-      } catch {
-        allData = [];
-      }
-
-      if (!allData.length) {
-        allData = [
-          { name: "Булочка Бургер", qty: "" },
-          { name: "Айсберг капуста", qty: "" },
-          { name: "Помидоры", qty: "" },
-          { name: "Огурцы", qty: "" }
-        ];
-      }
-
-      // При первой загрузке инициализируем currentValues
-      allData.forEach(item => {
-        currentValues[item.name] = item.qty || "";
-      });
-
-      renderTable(allData);
-      document.getElementById('status').innerText = 'Готово — можно вносить остатки.';
-    }
-
-    function renderTable(data) {
-      const tbody = document.querySelector('#tbl tbody');
-      tbody.innerHTML = '';
-      data.forEach(item => {
-        const name = item.name || '';
-        const showVal = currentValues[name] ?? "";
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHtml(name)}</td>
-          <td><input type="number" min="0" value="${showVal}" 
-              data-name="${escapeHtml(name)}" placeholder=""></td>`;
-        tbody.appendChild(tr);
-      });
-
-      // Обновляем currentValues при изменении значений
-      document.querySelectorAll('input[type="number"]').forEach(input => {
-        input.addEventListener('input', e => {
-          const name = e.target.dataset.name;
-          currentValues[name] = e.target.value;
-        });
-      });
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, (m) => (
-        { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]
-      ));
-    }
-
-    async function doSend(payload) {
-      if (TG && typeof TG.sendData === 'function') {
-        try {
-          TG.sendData(payload);
-          TG.close();
-          return;
-        } catch (e) { console.warn('Ошибка Telegram sendData:', e); }
-      }
-
-      try {
-        await navigator.clipboard.writeText(payload);
-        alert("✅ JSON скопирован в буфер.\nТеперь вставь его (Ctrl+V) в чат бота.");
-      } catch {
-        prompt("Скопируй JSON вручную и вставь в Telegram:", payload);
-      }
-    }
-
-    document.getElementById('saveBtn').addEventListener('click', async () => {
-      const out = allData.map(it => ({
-        name: it.name,
-        qty: Number(currentValues[it.name]) || 0
-      }));
-      const payload = JSON.stringify(out, null, 2);
-      await doSend(payload);
+function save(){
+  const rows = document.querySelectorAll("tr");
+  const out = [];
+  rows.forEach((r,i) => {
+    out.push({
+      name: data[i].name,
+      qty: Number(r.querySelector("input").value) || 0
     });
-
-    // 🔍 фильтрация при вводе
-    document.getElementById('searchBox').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase();
-      const filtered = allData.filter(it => it.name.toLowerCase().includes(term));
-      renderTable(filtered);
-    });
-
-    loadData();
-  </script>
+  });
+  TG.sendData(JSON.stringify({group: GROUP, items: out}));
+  TG.close();
+}
+</script>
 </body>
 </html>
