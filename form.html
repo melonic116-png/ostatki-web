@@ -5,49 +5,52 @@
 <meta charset="UTF-8">
 <title>Остатки</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+body{font-family:Arial;padding:12px}
+table{width:100%;border-collapse:collapse}
+td,th{border-bottom:1px solid #ddd;padding:6px}
+input{width:80px}
+button{margin-top:10px;width:100%;padding:10px}
+</style>
 </head>
 <body>
-<h2 id="title"></h2>
+
+<h3 id="title"></h3>
 <table id="tbl"></table>
-<button onclick="save()">Сохранить</button>
+<button onclick="save()">✅ Сохранить</button>
 
 <script>
 const TG = Telegram.WebApp;
 TG.expand();
 
 const params = new URLSearchParams(window.location.search);
-const GROUP = params.get("group") || "kitchen";
-document.getElementById("title").innerText = GROUP === "kitchen" ? "Кухня" : "Бар";
+const GROUP = params.get("group");
+document.getElementById("title").innerText =
+  GROUP === "kitchen" ? "Кухня" : "Бар";
 
 let data = [];
 
-fetch(`webapp_data_${GROUP}.json`)
+fetch(`./webapp_data_${GROUP}.json`)
   .then(r => r.json())
-  .then(j => {
-    data = j;
-    render();
-  });
+  .then(j => { data = j; render(); });
 
 function render(){
   const tbl = document.getElementById("tbl");
-  tbl.innerHTML = "";
-  data.forEach(i => {
-    const r = document.createElement("tr");
-    r.innerHTML = `<td>${i.name}</td><td><input type="number" value="${i.qty || ""}"></td>`;
-    tbl.appendChild(r);
+  tbl.innerHTML = "<tr><th>Наименование</th><th>Кол-во</th></tr>";
+  data.forEach((i,idx) => {
+    tbl.innerHTML += `
+      <tr>
+        <td>${i.name}</td>
+        <td><input type="number" value="${i.qty ?? ""}" onchange="data[${idx}].qty=this.value"></td>
+      </tr>`;
   });
 }
 
 function save(){
-  const rows = document.querySelectorAll("tr");
-  const out = [];
-  rows.forEach((r,i) => {
-    out.push({
-      name: data[i].name,
-      qty: Number(r.querySelector("input").value) || 0
-    });
-  });
-  TG.sendData(JSON.stringify({group: GROUP, items: out}));
+  TG.sendData(JSON.stringify({
+    group: GROUP,
+    items: data
+  }));
   TG.close();
 }
 </script>
