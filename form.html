@@ -12,21 +12,20 @@
   --bg: #f7f4ef;
   --card: #ffffff;
   --text: #222;
-  --muted: #666;
   --accent: #f4b740;
 }
 
 body {
   margin: 0;
   padding: 12px;
-  font-family: system-ui, -apple-system, Arial, sans-serif;
+  font-family: system-ui, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
 
 h2 {
-  margin: 4px 0 10px;
   text-align: center;
+  margin-bottom: 10px;
 }
 
 #search {
@@ -34,7 +33,6 @@ h2 {
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #ddd;
-  font-size: 15px;
   margin-bottom: 10px;
 }
 
@@ -42,7 +40,6 @@ h2 {
   background: var(--card);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
 
 .row {
@@ -67,7 +64,6 @@ h2 {
   border-radius: 8px;
   border: 1px solid #ccc;
   text-align: center;
-  font-size: 14px;
 }
 
 button {
@@ -78,12 +74,7 @@ button {
   border-radius: 14px;
   border: none;
   background: var(--accent);
-  color: #000;
   font-weight: 600;
-}
-
-button:active {
-  transform: scale(0.98);
 }
 </style>
 </head>
@@ -92,21 +83,13 @@ button:active {
 
 <h2 id="title">Остатки</h2>
 
-<input
-  id="search"
-  type="text"
-  placeholder="🔍 Поиск по наименованию..."
->
+<input id="search" placeholder="🔍 Поиск по наименованию">
 
 <div class="table" id="list"></div>
 
-<button onclick="save()">✅ Сохранить</button>
+<button onclick="save()">📋 Скопировать данные</button>
 
 <script>
-const TG = Telegram.WebApp;
-TG.ready();
-TG.expand();
-
 const params = new URLSearchParams(window.location.search);
 const GROUP = params.get("group") || "kitchen";
 
@@ -119,7 +102,7 @@ let filtered = [];
 fetch(`./webapp_data_${GROUP}.json`)
   .then(r => r.json())
   .then(j => {
-    data = j.map(i => ({ ...i, qty: i.qty ?? "" }));
+    data = j.map(i => ({ ...i, qty: "" }));
     filtered = data;
     render();
   });
@@ -128,7 +111,7 @@ function render() {
   const list = document.getElementById("list");
   list.innerHTML = "";
 
-  filtered.forEach((item, idx) => {
+  filtered.forEach(item => {
     const row = document.createElement("div");
     row.className = "row";
 
@@ -153,12 +136,22 @@ document.getElementById("search").addEventListener("input", e => {
   render();
 });
 
-function save() {
-  TG.sendData(JSON.stringify({
-    group: GROUP,
-    items: data
-  }));
-  TG.close();
+async function save() {
+  const payload = JSON.stringify(
+    data.map(i => ({
+      name: i.name,
+      qty: Number(i.qty) || 0
+    })),
+    null,
+    2
+  );
+
+  try {
+    await navigator.clipboard.writeText(payload);
+    alert("✅ Данные скопированы. Вставь их в чат бота.");
+  } catch {
+    prompt("Скопируй данные и вставь в Telegram:", payload);
+  }
 }
 </script>
 
