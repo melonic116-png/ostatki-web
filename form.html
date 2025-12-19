@@ -1,52 +1,159 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Остатки</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
-body{font-family:Arial;padding:12px}
-table{width:100%;border-collapse:collapse}
-td,th{border-bottom:1px solid #ddd;padding:6px}
-input{width:80px}
-button{margin-top:10px;width:100%;padding:10px}
+:root {
+  --bg: #f7f4ef;
+  --card: #ffffff;
+  --text: #222;
+  --muted: #666;
+  --accent: #f4b740;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+  font-family: system-ui, -apple-system, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h2 {
+  margin: 4px 0 10px;
+  text-align: center;
+}
+
+#search {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.table {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.name {
+  flex: 1;
+  font-size: 14px;
+}
+
+.qty input {
+  width: 70px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+}
+
+button:active {
+  transform: scale(0.98);
+}
 </style>
 </head>
+
 <body>
 
-<h3 id="title"></h3>
-<table id="tbl"></table>
+<h2 id="title">Остатки</h2>
+
+<input
+  id="search"
+  type="text"
+  placeholder="🔍 Поиск по наименованию..."
+>
+
+<div class="table" id="list"></div>
+
 <button onclick="save()">✅ Сохранить</button>
 
 <script>
 const TG = Telegram.WebApp;
+TG.ready();
 TG.expand();
 
 const params = new URLSearchParams(window.location.search);
-const GROUP = params.get("group");
+const GROUP = params.get("group") || "kitchen";
+
 document.getElementById("title").innerText =
-  GROUP === "kitchen" ? "Кухня" : "Бар";
+  GROUP === "kitchen" ? "🧑‍🍳 Кухня" : "🍹 Бар";
 
 let data = [];
+let filtered = [];
 
 fetch(`./webapp_data_${GROUP}.json`)
   .then(r => r.json())
-  .then(j => { data = j; render(); });
+  .then(j => {
+    data = j.map(i => ({ ...i, qty: i.qty ?? "" }));
+    filtered = data;
+    render();
+  });
 
-function render(){
-  const tbl = document.getElementById("tbl");
-  tbl.innerHTML = "<tr><th>Наименование</th><th>Кол-во</th></tr>";
-  data.forEach((i,idx) => {
-    tbl.innerHTML += `
-      <tr>
-        <td>${i.name}</td>
-        <td><input type="number" value="${i.qty ?? ""}" onchange="data[${idx}].qty=this.value"></td>
-      </tr>`;
+function render() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  filtered.forEach((item, idx) => {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    row.innerHTML = `
+      <div class="name">${item.name}</div>
+      <div class="qty">
+        <input type="number" value="${item.qty}">
+      </div>
+    `;
+
+    row.querySelector("input").addEventListener("input", e => {
+      item.qty = e.target.value;
+    });
+
+    list.appendChild(row);
   });
 }
 
-function save(){
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+  filtered = data.filter(i => i.name.toLowerCase().includes(q));
+  render();
+});
+
+function save() {
   TG.sendData(JSON.stringify({
     group: GROUP,
     items: data
@@ -54,5 +161,6 @@ function save(){
   TG.close();
 }
 </script>
+
 </body>
 </html>
