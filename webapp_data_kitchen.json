@@ -2,18 +2,18 @@
   "group": "kitchen",
   "items": [
     { "name": "Айсберг капуста", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
-    { "name": "ГП П/Ф Бекон говяжий нарезка", "pack": { "label": "пачка", "multiplier": 0,2 }, "base_unit": "кг" },
+    { "name": "ГП П/Ф Бекон говяжий нарезка", "pack": { "label": "пачка", "multiplier": 0.2 }, "base_unit": "кг" },
 
     { "name": "Булочка Бургер", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" },
     { "name": "Булочка Бургер Мини", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" },
     { "name": "Черная Булочка Бургер", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" },
     { "name": "Булочка хот дог", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" },
 
-    { "name": "ГП П/Ф Грибы жаренные", "pack": { "label": "пачка", "multiplier": 0,5 }, "base_unit": "кг" },
-    { "name": "Картофель по деревенский McCane", "pack": { "пачка": "", "multiplier": 2,5 }, "base_unit": "кг" },
-    { "name": "Фри замороженное", "pack": { "label": "пачка", "multiplier": 2,5 }, "base_unit": "кг" },
+    { "name": "ГП П/Ф Грибы жаренные", "pack": { "label": "пачка", "multiplier": 0.5 }, "base_unit": "кг" },
+    { "name": "Картофель по деревенский McCane", "pack": { "label": "пачка", "multiplier": 2.5 }, "base_unit": "кг" },
+    { "name": "Фри замороженное", "pack": { "label": "пачка", "multiplier": 2.5 }, "base_unit": "кг" },
 
-    { "name": "Кетчуп Танхо (910мл)", "pack": { "label": "бутылка", "multiplier": 0,91 }, "base_unit": "л" },
+    { "name": "Кетчуп Танхо (910мл)", "pack": { "label": "бутылка", "multiplier": 0.91 }, "base_unit": "л" },
 
     { "name": "Котлета Баранина", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" },
     { "name": "Котлета гов Большой", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" },
@@ -33,12 +33,12 @@
     { "name": "ГП П/Ф Нагетсы с луком", "pack": { "label": "", "multiplier": 1 }, "base_unit": "кг" },
     { "name": "Огурцы", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
 
-    { "name": "Приправа Орегано", "pack": { "label": "пачка", "multiplier": 0,1 }, "base_unit": "кг" },
+    { "name": "Приправа Орегано", "pack": { "label": "пачка", "multiplier": 0.1 }, "base_unit": "кг" },
 
-    { "name": "П/Ф Кимчи бург", "pack": { "label": "пачка", "multiplier": 0,5 }, "base_unit": "кг" },
+    { "name": "П/Ф Кимчи бург", "pack": { "label": "пачка", "multiplier": 0.5 }, "base_unit": "кг" },
     { "name": "П/Ф Котлета Смеш бург", "pack": { "label": "", "multiplier": 1 }, "base_unit": "кг" },
-    { "name": "П/Ф Лук карамельн бург", "pack": { "label": "пачка", "multiplier": 0,5 }, "base_unit": "кг" },
-    { "name": "П/Ф Маринов огурец свежий бург", "pack": { "label": "пачка", "multiplier": 0,5 }, "base_unit": "кг" },
+    { "name": "П/Ф Лук карамельн бург", "pack": { "label": "пачка", "multiplier": 0.5 }, "base_unit": "кг" },
+    { "name": "П/Ф Маринов огурец свежий бург", "pack": { "label": "пачка", "multiplier": 0.5 }, "base_unit": "кг" },
     { "name": "П/Ф Новая Куринная котлета бург", "pack": { "label": "", "multiplier": 1 }, "base_unit": "кг" },
     { "name": "П/Ф Салат Греческий бург", "pack": { "label": "", "multiplier": 1 }, "base_unit": "кг" },
     { "name": "П/Ф Салат Коул Слоу бург", "pack": { "label": "", "multiplier": 1 }, "base_unit": "кг" },
@@ -56,8 +56,8 @@
     { "name": "Сливочное масло Буренка Прибалтийское", "pack": { "label": "пачка", "multiplier": 1 }, "base_unit": "кг" },
     { "name": "Соль", "pack": { "label": "пачка", "multiplier": 1 }, "base_unit": "кг" },
 
-    { "name": "Сосиски Канада", "pack": { "label": "пачка", "multiplier": 0,45 }, "base_unit": "шт" },
-    { "name": "Сосиска куриная", "pack": { "label": "пачка", "multiplier": 0,35 }, "base_unit": "шт" },
+    { "name": "Сосиски Канада", "pack": { "label": "пачка", "multiplier": 0.45 }, "base_unit": "шт" },
+    { "name": "Сосиска куриная", "pack": { "label": "пачка", "multiplier": 0.35 }, "base_unit": "шт" },
     { "name": "Сосиски шерин", "pack": { "label": "пачка", "multiplier": 1 }, "base_unit": "шт" },
 
     { "name": "Соус 1000 Островов", "pack": { "label": "", "multiplier": 1 }, "base_unit": "кг" },
@@ -73,15 +73,15 @@
     { "name": "Соус Цезарь П/Ф", "pack": { "label": "", "multiplier": 1 }, "base_unit": "кг" },
 
     { "name": "Сухарики П/Ф", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
-    { "name": "ГП П/Ф Сыр моцарелла нарезка", "pack": { "label": "пачка", "multiplier": 0,4 }, "base_unit": "кг" },
+    { "name": "ГП П/Ф Сыр моцарелла нарезка", "pack": { "label": "пачка", "multiplier": 0.4 }, "base_unit": "кг" },
     { "name": "Сыр пармезан джукас", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
-    { "name": "Сыр хохланд Шерзод", "pack": { "label": "пачка", "multiplier": 1,1 }, "base_unit": "кг" },
+    { "name": "Сыр хохланд Шерзод", "pack": { "label": "пачка", "multiplier": 1.1 }, "base_unit": "кг" },
     { "name": "Сырные подушки в кг", "pack": { "label": "пачка", "multiplier": 1 }, "base_unit": "кг" },
 
     { "name": "Фритюрное масло", "pack": { "label": "бутылка", "multiplier": 5 }, "base_unit": "л" },
-    { "name": "Перец Холопеньё маринованный", "pack": { "label": "банка", "multiplier": 0,39 }, "base_unit": "кг" },
+    { "name": "Перец Холопеньё маринованный", "pack": { "label": "банка", "multiplier": 0.39 }, "base_unit": "кг" },
 
-    { "name": "Чипсы Lays", "pack": { "label": "пачка", "multiplier": 0,225 }, "base_unit": "шт" },
+    { "name": "Чипсы Lays", "pack": { "label": "пачка", "multiplier": 0.225 }, "base_unit": "шт" },
     { "name": "Яйцо", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" }
   ]
 }
