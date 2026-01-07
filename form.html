@@ -12,45 +12,65 @@ body {
   margin: 0;
   background: #0f0f0f;
   color: #fff;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+  font-family: system-ui;
 }
+
 .header {
-  padding: 12px;
+  padding: 10px 12px;
   font-size: 18px;
   font-weight: 600;
 }
-.list {
-  padding: 12px;
-  padding-bottom: 90px;
+
+.search {
+  padding: 0 12px 8px;
 }
-.item {
-  border-bottom: 1px solid #2a2a2a;
-  padding: 10px 0;
-}
-.item h3 {
-  margin: 0 0 6px 0;
-  font-size: 15px;
-}
-.row {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-input {
-  flex: 1;
+.search input {
+  width: 100%;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
 }
-.total {
-  margin-top: 6px;
-  font-weight: 600;
-  font-size: 13px;
+
+.list {
+  padding: 0 12px 90px;
 }
-.hint {
+
+.item {
+  border-bottom: 1px solid #2a2a2a;
+  padding: 8px 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.name {
+  flex: 1;
+  font-size: 14px;
+}
+
+.inputs {
+  display: flex;
+  gap: 6px;
+}
+
+input.qty {
+  width: 64px;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  text-align: center;
+}
+
+.total {
   font-size: 11px;
   color: #aaa;
+  margin-top: 4px;
 }
+
 .footer {
   position: fixed;
   bottom: 0;
@@ -60,6 +80,7 @@ input {
   background: #0f0f0f;
   border-top: 1px solid #2a2a2a;
 }
+
 button {
   width: 100%;
   padding: 14px;
@@ -76,10 +97,15 @@ button {
 <body>
 
 <div class="header">Остатки</div>
+
+<div class="search">
+  <input id="search" placeholder="Поиск по наименованию">
+</div>
+
 <div class="list" id="list"></div>
 
 <div class="footer">
-  <button onclick="sendToBot()">Готово</button>
+  <button onclick="copyToClipboard()">Готово</button>
 </div>
 
 <script>
@@ -87,70 +113,48 @@ const tg = Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-/* ====== GROUP ====== */
+/* ===== GROUP ===== */
 const params = new URLSearchParams(window.location.search);
-const group = params.get('group');
+const group = params.get('group') || 'kitchen';
 
-if (!group) {
-  document.body.innerHTML = '<div style="padding:16px">Не указана группа</div>';
-  throw new Error('No group');
-}
-
-/* ====== ABSOLUTE URLS (КЛЮЧ) ====== */
+/* ===== FILES ===== */
 const BASE = 'https://melonic116-png.github.io/ostatki-web/';
-
 const FILES = {
   bar: BASE + 'webapp_data_bar.json',
   kitchen: BASE + 'webapp_data_kitchen.json'
 };
 
-if (!FILES[group]) {
-  document.body.innerHTML = '<div style="padding:16px">Неизвестная группа</div>';
-  throw new Error('Bad group');
-}
-
-/* ====== LOAD ====== */
+/* ===== LOAD ===== */
 fetch(FILES[group])
-  .then(r => {
-    if (!r.ok) throw new Error('Fetch failed');
-    return r.json();
-  })
-  .then(render)
-  .catch(err => {
-    console.error(err);
-    document.body.innerHTML = '<div style="padding:16px">Ошибка загрузки данных</div>';
-  });
+  .then(r => r.json())
+  .then(render);
 
-/* ====== RENDER ====== */
+/* ===== RENDER ===== */
 function render(data) {
   const root = document.getElementById('list');
 
   data.items.forEach(item => {
     const div = document.createElement('div');
     div.className = 'item';
-    div.dataset.name = item.name;
+    div.dataset.name = item.name.toLowerCase();
     div.dataset.multiplier = Number(item.pack.multiplier) || 0;
     div.dataset.unit = item.base_unit;
 
-    const hasPack = div.dataset.multiplier > 0;
-
     div.innerHTML = `
-      <h3>${item.name}</h3>
-
-      ${hasPack ? `
       <div class="row">
-        <input type="number" min="0" step="1" placeholder="${item.pack.label}">
-      </div>` : ``}
+        <div class="name">${item.name}</div>
 
-      <div class="row">
-        <input type="number" min="0" step="0.001" placeholder="Открыто / ${item.base_unit}">
+        <div class="inputs">
+          <input class="qty pack" type="number" min="0" step="1"
+            placeholder="${item.pack.label || ''}">
+          <input class="qty open" type="number" min="0" step="0.001"
+            placeholder="${item.base_unit}">
+        </div>
       </div>
 
       <div class="total">
-        ИТОГО: <span>0.000</span> ${item.base_unit}
+        Итого: <span>0.000</span> ${item.base_unit}
       </div>
-
-      ${hasPack ? `<div class="hint">1 ${item.pack.label} = ${item.pack.multiplier} ${item.base_unit}</div>` : ``}
     `;
 
     div.querySelectorAll('input').forEach(i =>
@@ -161,37 +165,38 @@ function render(data) {
   });
 }
 
-/* ====== CALC ====== */
+/* ===== CALC ===== */
 function update(div) {
   const k = Number(div.dataset.multiplier);
-  const inputs = div.querySelectorAll('input');
-
-  let packs = 0;
-  let open = 0;
-
-  if (k > 0) {
-    packs = Number(inputs[0].value) || 0;
-    open  = Number(inputs[1].value) || 0;
-  } else {
-    open  = Number(inputs[0].value) || 0;
-  }
-
-  div.querySelector('span').textContent = (packs * k + open).toFixed(3);
+  const pack = Number(div.querySelector('.pack').value) || 0;
+  const open = Number(div.querySelector('.open').value) || 0;
+  div.querySelector('span').textContent = (pack * k + open).toFixed(3);
 }
 
-/* ====== SEND ====== */
-function sendToBot() {
-  const out = [];
+/* ===== SEARCH ===== */
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.item').forEach(item => {
+    item.style.display = item.dataset.name.includes(q) ? '' : 'none';
+  });
+});
+
+/* ===== COPY ===== */
+function copyToClipboard() {
+  const result = [];
 
   document.querySelectorAll('.item').forEach(div => {
     const qty = Number(div.querySelector('span').textContent);
     if (qty > 0) {
-      out.push({ name: div.dataset.name, qty });
+      result.push({
+        name: div.querySelector('.name').textContent,
+        qty: qty
+      });
     }
   });
 
-  tg.sendData(JSON.stringify(out));
-  tg.close();
+  navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+  alert('Скопировано в буфер обмена');
 }
 </script>
 
