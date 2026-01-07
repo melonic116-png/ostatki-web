@@ -5,100 +5,161 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Остатки</title>
 
+<!-- Telegram WebApp -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 body {
-  background:#0f0f0f;
-  color:#fff;
-  font-family:system-ui;
-  padding:16px;
+  margin: 0;
+  background: #0f0f0f;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
+
+.header {
+  padding: 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.list {
+  padding: 12px;
+  padding-bottom: 90px;
+}
+
 .item {
-  border-bottom:1px solid #333;
-  padding:12px 0;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 10px 0;
 }
+
+.item h3 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
 .row {
-  display:flex;
-  gap:8px;
-  margin-top:6px;
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
 }
+
 input {
-  flex:1;
-  padding:8px;
-  border-radius:6px;
-  border:none;
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
 }
+
 .total {
-  margin-top:6px;
-  font-weight:bold;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
 }
-.small {
-  font-size:12px;
-  color:#aaa;
+
+.hint {
+  font-size: 11px;
+  color: #9a9a9a;
+  margin-top: 4px;
 }
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #0f0f0f;
+  padding: 12px;
+  border-top: 1px solid #2a2a2a;
+}
+
 button {
-  width:100%;
-  padding:14px;
-  margin-top:16px;
-  border:none;
-  border-radius:10px;
-  background:#2ecc71;
-  font-size:16px;
-  font-weight:600;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  background: #2ecc71;
+  color: #000;
 }
 </style>
 </head>
 
 <body>
 
-<div id="list"></div>
+<div class="header">Остатки</div>
+<div class="list" id="list"></div>
 
-<button onclick="sendToBot()">Готово</button>
+<div class="footer">
+  <button onclick="sendToBot()">Готово</button>
+</div>
 
 <script>
 const tg = Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// ⚠️ подставляется bar.json или kitchen.json
-fetch('data.json')
-  .then(r => r.json())
-  .then(render);
+/* ---------- ОПРЕДЕЛЯЕМ ГРУППУ ---------- */
+const params = new URLSearchParams(window.location.search);
+const group = params.get('group');
 
+if (!group) {
+  document.body.innerHTML = '<p style="padding:16px">Не указана группа</p>';
+  throw new Error('Group not specified');
+}
+
+/* ---------- ЗАГРУЖАЕМ JSON ---------- */
+fetch(`${group}.json`)
+  .then(r => {
+    if (!r.ok) throw new Error('JSON load error');
+    return r.json();
+  })
+  .then(render)
+  .catch(err => {
+    console.error(err);
+    document.body.innerHTML = '<p style="padding:16px">Ошибка загрузки данных</p>';
+  });
+
+/* ---------- РЕНДЕР ---------- */
 function render(data) {
   const root = document.getElementById('list');
 
   data.items.forEach(item => {
     const div = document.createElement('div');
     div.className = 'item';
+
     div.dataset.name = item.name;
     div.dataset.multiplier = item.pack.multiplier;
     div.dataset.unit = item.base_unit;
 
+    const hasPack = item.pack.multiplier > 0;
+
     div.innerHTML = `
       <h3>${item.name}</h3>
 
-      ${item.pack.multiplier > 0 ? `
-      <div class="row">
-        <input type="number" min="0" step="1"
-          placeholder="${item.pack.label}">
-      </div>` : ``}
+      ${hasPack ? `
+        <div class="row">
+          <input type="number" min="0" step="1"
+                 placeholder="${item.pack.label}">
+        </div>
+      ` : ``}
 
       <div class="row">
         <input type="number" min="0" step="0.001"
-          placeholder="Открыто / ${item.base_unit}">
+               placeholder="Открыто / ${item.base_unit}">
       </div>
 
       <div class="total">
-        ИТОГО: <span>0</span> ${item.base_unit}
+        ИТОГО: <span>0.000</span> ${item.base_unit}
       </div>
 
-      <div class="small">
-        ${item.pack.multiplier > 0
-          ? `1 ${item.pack.label} = ${item.pack.multiplier} ${item.base_unit}`
-          : ``}
-      </div>
+      ${hasPack ? `
+        <div class="hint">
+          1 ${item.pack.label} = ${item.pack.multiplier} ${item.base_unit}
+        </div>
+      ` : ``}
     `;
 
     div.querySelectorAll('input').forEach(inp => {
@@ -109,9 +170,10 @@ function render(data) {
   });
 }
 
+/* ---------- ПЕРЕСЧЁТ ---------- */
 function update(div) {
-  const inputs = div.querySelectorAll('input');
   const k = Number(div.dataset.multiplier);
+  const inputs = div.querySelectorAll('input');
 
   let packs = 0;
   let open = 0;
@@ -127,6 +189,7 @@ function update(div) {
   div.querySelector('span').textContent = total.toFixed(3);
 }
 
+/* ---------- ОТПРАВКА БОТУ ---------- */
 function sendToBot() {
   const result = [];
 
