@@ -2,156 +2,146 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Остатки</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-:root {
-  --bg: #f7f4ef;
-  --card: #ffffff;
-  --text: #222;
-  --accent: #f4b740;
-}
-
 body {
-  margin: 0;
-  padding: 12px;
-  font-family: system-ui, Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background:#0f0f0f;
+  color:#fff;
+  font-family:system-ui;
+  padding:16px;
 }
-
-h2 {
-  text-align: center;
-  margin-bottom: 10px;
+.item {
+  border-bottom:1px solid #333;
+  padding:12px 0;
 }
-
-#search {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  margin-bottom: 10px;
-}
-
-.table {
-  background: var(--card);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
 .row {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  display:flex;
+  gap:8px;
+  margin-top:6px;
 }
-
-.row:last-child {
-  border-bottom: none;
+input {
+  flex:1;
+  padding:8px;
+  border-radius:6px;
+  border:none;
 }
-
-.name {
-  flex: 1;
-  font-size: 14px;
+.total {
+  margin-top:6px;
+  font-weight:bold;
 }
-
-.qty input {
-  width: 70px;
-  padding: 6px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  text-align: center;
+.small {
+  font-size:12px;
+  color:#aaa;
 }
-
 button {
-  width: 100%;
-  margin-top: 14px;
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 14px;
-  border: none;
-  background: var(--accent);
-  font-weight: 600;
+  width:100%;
+  padding:14px;
+  margin-top:16px;
+  border:none;
+  border-radius:10px;
+  background:#2ecc71;
+  font-size:16px;
+  font-weight:600;
 }
 </style>
 </head>
 
 <body>
 
-<h2 id="title">Остатки</h2>
+<div id="list"></div>
 
-<input id="search" placeholder="🔍 Поиск по наименованию">
-
-<div class="table" id="list"></div>
-
-<button onclick="save()">📋 Скопировать данные</button>
+<button onclick="sendToBot()">Готово</button>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const GROUP = params.get("group") || "kitchen";
+const tg = Telegram.WebApp;
+tg.ready();
+tg.expand();
 
-document.getElementById("title").innerText =
-  GROUP === "kitchen" ? "🧑‍🍳 Кухня" : "🍹 Бар";
-
-let data = [];
-let filtered = [];
-
-fetch(`./webapp_data_${GROUP}.json`)
+// ⚠️ подставляется bar.json или kitchen.json
+fetch('data.json')
   .then(r => r.json())
-  .then(j => {
-    data = j.map(i => ({ ...i, qty: "" }));
-    filtered = data;
-    render();
-  });
+  .then(render);
 
-function render() {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+function render(data) {
+  const root = document.getElementById('list');
 
-  filtered.forEach(item => {
-    const row = document.createElement("div");
-    row.className = "row";
+  data.items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.dataset.name = item.name;
+    div.dataset.multiplier = item.pack.multiplier;
+    div.dataset.unit = item.base_unit;
 
-    row.innerHTML = `
-      <div class="name">${item.name}</div>
-      <div class="qty">
-        <input type="number" value="${item.qty}">
+    div.innerHTML = `
+      <h3>${item.name}</h3>
+
+      ${item.pack.multiplier > 0 ? `
+      <div class="row">
+        <input type="number" min="0" step="1"
+          placeholder="${item.pack.label}">
+      </div>` : ``}
+
+      <div class="row">
+        <input type="number" min="0" step="0.001"
+          placeholder="Открыто / ${item.base_unit}">
+      </div>
+
+      <div class="total">
+        ИТОГО: <span>0</span> ${item.base_unit}
+      </div>
+
+      <div class="small">
+        ${item.pack.multiplier > 0
+          ? `1 ${item.pack.label} = ${item.pack.multiplier} ${item.base_unit}`
+          : ``}
       </div>
     `;
 
-    row.querySelector("input").addEventListener("input", e => {
-      item.qty = e.target.value;
+    div.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', () => update(div));
     });
 
-    list.appendChild(row);
+    root.appendChild(div);
   });
 }
 
-document.getElementById("search").addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
-  filtered = data.filter(i => i.name.toLowerCase().includes(q));
-  render();
-});
+function update(div) {
+  const inputs = div.querySelectorAll('input');
+  const k = Number(div.dataset.multiplier);
 
-async function save() {
-  const payload = JSON.stringify(
-    data.map(i => ({
-      name: i.name,
-      qty: Number(i.qty) || 0
-    })),
-    null,
-    2
-  );
+  let packs = 0;
+  let open = 0;
 
-  try {
-    await navigator.clipboard.writeText(payload);
-    alert("✅ Данные скопированы. Вставь их в чат бота.");
-  } catch {
-    prompt("Скопируй данные и вставь в Telegram:", payload);
+  if (k > 0) {
+    packs = Number(inputs[0].value) || 0;
+    open  = Number(inputs[1].value) || 0;
+  } else {
+    open  = Number(inputs[0].value) || 0;
   }
+
+  const total = packs * k + open;
+  div.querySelector('span').textContent = total.toFixed(3);
+}
+
+function sendToBot() {
+  const result = [];
+
+  document.querySelectorAll('.item').forEach(div => {
+    const qty = Number(div.querySelector('span').textContent);
+    if (qty > 0) {
+      result.push({
+        name: div.dataset.name,
+        qty: qty
+      });
+    }
+  });
+
+  tg.sendData(JSON.stringify(result));
+  tg.close();
 }
 </script>
 
