@@ -1,210 +1,76 @@
-[
-  {
-    "name": "Айсти зеленый П/Ф Бург",
-    "qty": ""
-  },
-  {
-    "name": "Айсти черный П/Ф Бург",
-    "qty": ""
-  },
-  {
-    "name": "Банан",
-    "qty": ""
-  },
-  {
-    "name": "Взбитые сливки",
-    "qty": ""
-  },
-  {
-    "name": "Вода без газа 0.5л",
-    "qty": ""
-  },
-  {
-    "name": "Вода с газом 0.5л",
-    "qty": ""
-  },
-  {
-    "name": "Джем из черничного пюре Blueberry",
-    "qty": ""
-  },
-  {
-    "name": "Джем манго Boduo",
-    "qty": ""
-  },
-  {
-    "name": "Джем персик-жасмин Boduo",
-    "qty": ""
-  },
-  {
-    "name": "Ежевика (замороженная)",
-    "qty": ""
-  },
-  {
-    "name": "Кола 0.5л",
-    "qty": ""
-  },
-  {
-    "name": "Кола 0.5л Zero",
-    "qty": ""
-  },
-  {
-    "name": "Кола паст микс",
-    "qty": ""
-  },
-  {
-    "name": "Кофе Lavazza",
-    "qty": ""
-  },
-  {
-    "name": "Лайм",
-    "qty": ""
-  },
-  {
-    "name": "Лимон бар",
-    "qty": ""
-  },
-  {
-    "name": "Малина (замороженная)",
-    "qty": ""
-  },
-  {
-    "name": "Молоко 3,2% для бара",
-    "qty": ""
-  },
-  {
-    "name": "Морковь для бара",
-    "qty": ""
-  },
-  {
-    "name": "Мороженое",
-    "qty": ""
-  },
-  {
-    "name": "Мята",
-    "qty": ""
-  },
-  {
-    "name": "Ред Булл",
-    "qty": ""
-  },
-  {
-    "name": "Сироп Банан",
-    "qty": ""
-  },
-  {
-    "name": "Сироп Ваниль",
-    "qty": ""
-  },
-  {
-    "name": "Сироп Карамель",
-    "qty": ""
-  },
-  {
-    "name": "Сироп клубника Boduo",
-    "qty": ""
-  },
-  {
-    "name": "Сироп Лесные ягоды",
-    "qty": ""
-  },
-  {
-    "name": "Сироп Малина",
-    "qty": ""
-  },
-  {
-    "name": "Сироп манго Boduo",
-    "qty": ""
-  },
-  {
-    "name": "Сироп мохито",
-    "qty": ""
-  },
-  {
-    "name": "Сироп мята Boduo",
-    "qty": ""
-  },
-  {
-    "name": "Сироп Тархун",
-    "qty": ""
-  },
-  {
-    "name": "Сок абрикос",
-    "qty": ""
-  },
-  {
-    "name": "Сок ананас",
-    "qty": ""
-  },
-  {
-    "name": "Сок апельсин",
-    "qty": ""
-  },
-  {
-    "name": "Сок Вишнёвый",
-    "qty": ""
-  },
-  {
-    "name": "Сок лимонный",
-    "qty": ""
-  },
-  {
-    "name": "Сок мультифрукт",
-    "qty": ""
-  },
-  {
-    "name": "Сок персик",
-    "qty": ""
-  },
-  {
-    "name": "Сок яблочный",
-    "qty": ""
-  },
-  {
-    "name": "Сок яблочный 200мл",
-    "qty": ""
-  },
-  {
-    "name": "Спрайт 0.5л",
-    "qty": ""
-  },
-  {
-    "name": "Спрайт паст микс",
-    "qty": ""
-  },
-  {
-    "name": "Топпинг шоколад Andros",
-    "qty": ""
-  },
-  {
-    "name": "Фанта 0.5л",
-    "qty": ""
-  },
-  {
-    "name": "Фанта паст микс",
-    "qty": ""
-  },
-  {
-    "name": "Фреш Лаймон",
-    "qty": ""
-  },
-  {
-    "name": "ЧАЙ зеленый only",
-    "qty": ""
-  },
-  {
-    "name": "ЧАЙ черный only",
-    "qty": ""
-  },
-  {
-    "name": "ЧАЙ эрл-грей only",
-    "qty": ""
-  },
-  {
-    "name": "Яблоко семиренка",
-    "qty": ""
-  },
-  {
-    "name": "Шоколад горячий Van Houten",
-    "qty": ""
-  }
-]
+{
+  "group": "bar",
+  "items": [
+    { "name": "Айсти зеленый П/Ф Бург", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Айсти черный П/Ф Бург", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Банан", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
+    { "name": "Взбитые сливки", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "шт" },
+
+    { "name": "Вода без газа 0.5л", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "шт" },
+    { "name": "Вода с газом 0.5л", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "шт" },
+
+    { "name": "Джем из черничного пюре Blueberry", "pack": { "label": "банка", "multiplier": 1,3 }, "base_unit": "л" },
+    { "name": "Джем манго Boduo", "pack": { "label": "банка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Джем персик-жасмин Boduo", "pack": { "label": "банка", "multiplier": 1 }, "base_unit": "л" },
+
+    { "name": "Ежевика (замороженная)", "pack": { "label": "пачка", "multiplier": 0,35 }, "base_unit": "кг" },
+
+    { "name": "Кола 0.5л", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "шт" },
+    { "name": "Кола 0.5л Zero", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "шт" },
+    { "name": "Кола паст микс", "pack": { "label": "пачка", "multiplier": 20 }, "base_unit": "л" },
+
+    { "name": "Кофе Lavazza", "pack": { "label": "пачка", "multiplier": 1 }, "base_unit": "кг" },
+
+    { "name": "Лайм", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
+    { "name": "Лимон бар", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
+
+    { "name": "Малина (замороженная)", "pack": { "label": "пачка", "multiplier": 0,35 }, "base_unit": "кг" },
+
+    { "name": "Молоко 3,2% для бара", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+
+    { "name": "Морковь для бара", "pack": { "label": "пачка", "multiplier": 0,5 }, "base_unit": "кг" },
+    { "name": "Мороженое", "pack": { "label": "пачка", "multiplier": 1 }, "base_unit": "кг" },
+    { "name": "Мята", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
+
+    { "name": "Ред Булл", "pack": { "label": "блок", "multiplier": 24 }, "base_unit": "шт" },
+
+    { "name": "Сироп Банан", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп Ваниль", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп Карамель", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп клубника Boduo", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп Лесные ягоды", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп Малина", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп манго Boduo", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп мохито", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп мята Boduo", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+    { "name": "Сироп Тархун", "pack": { "label": "бутылка", "multiplier": 1 }, "base_unit": "л" },
+
+    { "name": "Сок абрикос", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Сок ананас", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Сок апельсин", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Сок Вишнёвый", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Сок лимонный", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Сок мультифрукт", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Сок персик", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Сок яблочный", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+
+    { "name": "Сок яблочный 200мл", "pack": { "label": "блок", "multiplier": 27 }, "base_unit": "л" },
+
+    { "name": "Спрайт 0.5л", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Спрайт паст микс", "pack": { "label": "пачка", "multiplier": 10 }, "base_unit": "л" },
+
+    { "name": "Топпинг шоколад Andros", "pack": { "label": "шт", "multiplier": 1 }, "base_unit": "кг" },
+
+    { "name": "Фанта 0.5л", "pack": { "label": "блок", "multiplier": 12 }, "base_unit": "л" },
+    { "name": "Фанта паст микс", "pack": { "label": "пачка", "multiplier": 10 }, "base_unit": "л" },
+
+    { "name": "Фреш Лаймон", "pack": { "label": "блок", "multiplier": 24 }, "base_unit": "л" },
+
+    { "name": "ЧАЙ зеленый only", "pack": { "label": "пачка", "multiplier": 100 }, "base_unit": "кг" },
+    { "name": "ЧАЙ черный only", "pack": { "label": "пачка", "multiplier": 100 }, "base_unit": "кг" },
+    { "name": "ЧАЙ эрл-грей only", "pack": { "label": "пачка", "multiplier": 100 }, "base_unit": "кг" },
+
+    { "name": "Яблоко семиренка", "pack": { "label": "кг", "multiplier": 1 }, "base_unit": "кг" },
+    { "name": "Шоколад горячий Van Houten", "pack": { "label": "пачка", "multiplier": 1 }, "base_unit": "кг" }
+  ]
+}
