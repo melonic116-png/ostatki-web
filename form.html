@@ -14,72 +14,59 @@ body {
   color: #fff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
-
 .header {
   padding: 12px;
   font-size: 18px;
   font-weight: 600;
 }
-
 .list {
   padding: 12px;
   padding-bottom: 90px;
 }
-
 .item {
   border-bottom: 1px solid #2a2a2a;
   padding: 10px 0;
 }
-
 .item h3 {
   margin: 0 0 6px 0;
   font-size: 15px;
-  font-weight: 500;
 }
-
 .row {
   display: flex;
   gap: 8px;
   margin-top: 6px;
 }
-
 input {
   flex: 1;
   padding: 10px;
   border-radius: 8px;
   border: none;
-  font-size: 14px;
 }
-
 .total {
   margin-top: 6px;
-  font-size: 13px;
   font-weight: 600;
+  font-size: 13px;
 }
-
 .hint {
   font-size: 11px;
-  color: #9a9a9a;
-  margin-top: 4px;
+  color: #aaa;
 }
-
 .footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #0f0f0f;
   padding: 12px;
+  background: #0f0f0f;
   border-top: 1px solid #2a2a2a;
 }
-
 button {
   width: 100%;
   padding: 14px;
+  border-radius: 12px;
+  border: none;
   font-size: 16px;
   font-weight: 600;
-  border: none;
-  border-radius: 12px;
   background: #2ecc71;
   color: #000;
 }
@@ -96,36 +83,36 @@ button {
 </div>
 
 <script>
-/* ================= TELEGRAM ================= */
 const tg = Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-/* ================= GROUP ================= */
+/* ====== GROUP ====== */
 const params = new URLSearchParams(window.location.search);
 const group = params.get('group');
 
 if (!group) {
   document.body.innerHTML = '<div style="padding:16px">Не указана группа</div>';
-  throw new Error('Group not specified');
+  throw new Error('No group');
 }
 
-/* ================= JSON MAP ================= */
-/* ⬇⬇⬇ ВАЖНО: ИМЕНА ФАЙЛОВ КАК У ТЕБЯ В GITHUB */
-const FILE_MAP = {
-  bar: 'webapp_data_bar.json',
-  kitchen: 'webapp_data_kitchen.json'
+/* ====== ABSOLUTE URLS (КЛЮЧ) ====== */
+const BASE = 'https://melonic116-png.github.io/ostatki-web/';
+
+const FILES = {
+  bar: BASE + 'webapp_data_bar.json',
+  kitchen: BASE + 'webapp_data_kitchen.json'
 };
 
-if (!FILE_MAP[group]) {
+if (!FILES[group]) {
   document.body.innerHTML = '<div style="padding:16px">Неизвестная группа</div>';
-  throw new Error('Unknown group');
+  throw new Error('Bad group');
 }
 
-/* ================= LOAD DATA ================= */
-fetch(FILE_MAP[group])
+/* ====== LOAD ====== */
+fetch(FILES[group])
   .then(r => {
-    if (!r.ok) throw new Error('Fetch error');
+    if (!r.ok) throw new Error('Fetch failed');
     return r.json();
   })
   .then(render)
@@ -134,14 +121,13 @@ fetch(FILE_MAP[group])
     document.body.innerHTML = '<div style="padding:16px">Ошибка загрузки данных</div>';
   });
 
-/* ================= RENDER ================= */
+/* ====== RENDER ====== */
 function render(data) {
   const root = document.getElementById('list');
 
   data.items.forEach(item => {
     const div = document.createElement('div');
     div.className = 'item';
-
     div.dataset.name = item.name;
     div.dataset.multiplier = Number(item.pack.multiplier) || 0;
     div.dataset.unit = item.base_unit;
@@ -152,37 +138,30 @@ function render(data) {
       <h3>${item.name}</h3>
 
       ${hasPack ? `
-        <div class="row">
-          <input type="number" min="0" step="1"
-            placeholder="${item.pack.label}">
-        </div>
-      ` : ``}
+      <div class="row">
+        <input type="number" min="0" step="1" placeholder="${item.pack.label}">
+      </div>` : ``}
 
       <div class="row">
-        <input type="number" min="0" step="0.001"
-          placeholder="Открыто / ${item.base_unit}">
+        <input type="number" min="0" step="0.001" placeholder="Открыто / ${item.base_unit}">
       </div>
 
       <div class="total">
         ИТОГО: <span>0.000</span> ${item.base_unit}
       </div>
 
-      ${hasPack ? `
-        <div class="hint">
-          1 ${item.pack.label} = ${item.pack.multiplier} ${item.base_unit}
-        </div>
-      ` : ``}
+      ${hasPack ? `<div class="hint">1 ${item.pack.label} = ${item.pack.multiplier} ${item.base_unit}</div>` : ``}
     `;
 
-    div.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('input', () => update(div));
-    });
+    div.querySelectorAll('input').forEach(i =>
+      i.addEventListener('input', () => update(div))
+    );
 
     root.appendChild(div);
   });
 }
 
-/* ================= CALC ================= */
+/* ====== CALC ====== */
 function update(div) {
   const k = Number(div.dataset.multiplier);
   const inputs = div.querySelectorAll('input');
@@ -197,25 +176,21 @@ function update(div) {
     open  = Number(inputs[0].value) || 0;
   }
 
-  const total = packs * k + open;
-  div.querySelector('span').textContent = total.toFixed(3);
+  div.querySelector('span').textContent = (packs * k + open).toFixed(3);
 }
 
-/* ================= SEND ================= */
+/* ====== SEND ====== */
 function sendToBot() {
-  const result = [];
+  const out = [];
 
   document.querySelectorAll('.item').forEach(div => {
     const qty = Number(div.querySelector('span').textContent);
     if (qty > 0) {
-      result.push({
-        name: div.dataset.name,
-        qty: qty
-      });
+      out.push({ name: div.dataset.name, qty });
     }
   });
 
-  tg.sendData(JSON.stringify(result));
+  tg.sendData(JSON.stringify(out));
   tg.close();
 }
 </script>
