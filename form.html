@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Остатки</title>
 
-<!-- Telegram WebApp -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
@@ -97,32 +96,45 @@ button {
 </div>
 
 <script>
+/* ================= TELEGRAM ================= */
 const tg = Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-/* ---------- ОПРЕДЕЛЯЕМ ГРУППУ ---------- */
+/* ================= GROUP ================= */
 const params = new URLSearchParams(window.location.search);
 const group = params.get('group');
 
 if (!group) {
-  document.body.innerHTML = '<p style="padding:16px">Не указана группа</p>';
+  document.body.innerHTML = '<div style="padding:16px">Не указана группа</div>';
   throw new Error('Group not specified');
 }
 
-/* ---------- ЗАГРУЖАЕМ JSON ---------- */
-fetch(`${group}.json`)
+/* ================= JSON MAP ================= */
+/* ⬇⬇⬇ ВАЖНО: ИМЕНА ФАЙЛОВ КАК У ТЕБЯ В GITHUB */
+const FILE_MAP = {
+  bar: 'webapp_data_bar.json',
+  kitchen: 'webapp_data_kitchen.json'
+};
+
+if (!FILE_MAP[group]) {
+  document.body.innerHTML = '<div style="padding:16px">Неизвестная группа</div>';
+  throw new Error('Unknown group');
+}
+
+/* ================= LOAD DATA ================= */
+fetch(FILE_MAP[group])
   .then(r => {
-    if (!r.ok) throw new Error('JSON load error');
+    if (!r.ok) throw new Error('Fetch error');
     return r.json();
   })
   .then(render)
   .catch(err => {
     console.error(err);
-    document.body.innerHTML = '<p style="padding:16px">Ошибка загрузки данных</p>';
+    document.body.innerHTML = '<div style="padding:16px">Ошибка загрузки данных</div>';
   });
 
-/* ---------- РЕНДЕР ---------- */
+/* ================= RENDER ================= */
 function render(data) {
   const root = document.getElementById('list');
 
@@ -131,10 +143,10 @@ function render(data) {
     div.className = 'item';
 
     div.dataset.name = item.name;
-    div.dataset.multiplier = item.pack.multiplier;
+    div.dataset.multiplier = Number(item.pack.multiplier) || 0;
     div.dataset.unit = item.base_unit;
 
-    const hasPack = item.pack.multiplier > 0;
+    const hasPack = div.dataset.multiplier > 0;
 
     div.innerHTML = `
       <h3>${item.name}</h3>
@@ -142,13 +154,13 @@ function render(data) {
       ${hasPack ? `
         <div class="row">
           <input type="number" min="0" step="1"
-                 placeholder="${item.pack.label}">
+            placeholder="${item.pack.label}">
         </div>
       ` : ``}
 
       <div class="row">
         <input type="number" min="0" step="0.001"
-               placeholder="Открыто / ${item.base_unit}">
+          placeholder="Открыто / ${item.base_unit}">
       </div>
 
       <div class="total">
@@ -170,7 +182,7 @@ function render(data) {
   });
 }
 
-/* ---------- ПЕРЕСЧЁТ ---------- */
+/* ================= CALC ================= */
 function update(div) {
   const k = Number(div.dataset.multiplier);
   const inputs = div.querySelectorAll('input');
@@ -189,7 +201,7 @@ function update(div) {
   div.querySelector('span').textContent = total.toFixed(3);
 }
 
-/* ---------- ОТПРАВКА БОТУ ---------- */
+/* ================= SEND ================= */
 function sendToBot() {
   const result = [];
 
