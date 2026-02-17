@@ -8,89 +8,20 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-body {
-  margin: 0;
-  background: #0f0f0f;
-  color: #fff;
-  font-family: system-ui;
-}
-
-.header {
-  padding: 10px 12px;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.search {
-  padding: 0 12px 8px;
-}
-.search input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-}
-
-.list {
-  padding: 0 12px 90px;
-}
-
-.item {
-  border-bottom: 1px solid #2a2a2a;
-  padding: 8px 0;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.name {
-  flex: 1;
-  font-size: 14px;
-}
-
-.inputs {
-  display: flex;
-  gap: 6px;
-}
-
-input.qty {
-  width: 64px;
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  font-size: 13px;
-  text-align: center;
-}
-
-.total {
-  font-size: 11px;
-  color: #aaa;
-  margin-top: 4px;
-}
-
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px;
-  background: #0f0f0f;
-  border-top: 1px solid #2a2a2a;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  font-size: 16px;
-  font-weight: 600;
-  background: #2ecc71;
-  color: #000;
-}
+body { margin:0; background:#0f0f0f; color:#fff; font-family:system-ui; }
+.header { padding:10px 12px; font-size:18px; font-weight:600; }
+.search { padding:0 12px 8px; }
+.search input { width:100%; padding:10px; border-radius:10px; border:none; }
+.list { padding:0 12px 90px; }
+.category { margin-top:20px; font-weight:700; font-size:15px; }
+.item { border-bottom:1px solid #2a2a2a; padding:8px 0; }
+.row { display:flex; align-items:center; gap:6px; }
+.name { flex:1; font-size:14px; }
+.inputs { display:flex; gap:6px; }
+input.qty { width:64px; padding:8px; border-radius:8px; border:none; font-size:13px; text-align:center; }
+.total { font-size:11px; color:#aaa; margin-top:4px; }
+.footer { position:fixed; bottom:0; left:0; right:0; padding:12px; background:#0f0f0f; border-top:1px solid #2a2a2a; }
+button { width:100%; padding:14px; border-radius:12px; border:none; font-size:16px; font-weight:600; background:#2ecc71; color:#000; }
 </style>
 </head>
 
@@ -113,59 +44,64 @@ const tg = Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-/* ===== GROUP ===== */
 const params = new URLSearchParams(window.location.search);
 const group = params.get('group') || 'kitchen';
 
-/* ===== FILES ===== */
 const BASE = 'https://melonic116-png.github.io/ostatki-web/';
 const FILES = {
   bar: BASE + 'webapp_data_bar.json',
-  kitchen: BASE + 'webapp_data_kitchen.json'
+  kitchen: BASE + 'webapp_data_kitchen.json',
+  ceh: BASE + 'webapp_data_ceh.json'
 };
 
-/* ===== LOAD ===== */
 fetch(FILES[group])
   .then(r => r.json())
   .then(render);
 
-/* ===== RENDER ===== */
 function render(data) {
   const root = document.getElementById('list');
+  root.innerHTML = '';
 
-  data.items.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.dataset.name = item.name.toLowerCase();
-    div.dataset.multiplier = Number(item.pack.multiplier) || 0;
-    div.dataset.unit = item.base_unit;
+  if (data.categories) {
+    data.categories.forEach(cat => {
+      const title = document.createElement('div');
+      title.className = 'category';
+      title.textContent = cat.name;
+      root.appendChild(title);
 
-    div.innerHTML = `
-      <div class="row">
-        <div class="name">${item.name}</div>
-
-        <div class="inputs">
-          <input class="qty pack" type="number" min="0" step="1"
-            placeholder="${item.pack.label || ''}">
-          <input class="qty open" type="number" min="0" step="0.001"
-            placeholder="${item.base_unit}">
-        </div>
-      </div>
-
-      <div class="total">
-        Итого: <span>0.000</span> ${item.base_unit}
-      </div>
-    `;
-
-    div.querySelectorAll('input').forEach(i =>
-      i.addEventListener('input', () => update(div))
-    );
-
-    root.appendChild(div);
-  });
+      cat.items.forEach(item => renderItem(item, root));
+    });
+  } else {
+    data.items.forEach(item => renderItem(item, root));
+  }
 }
 
-/* ===== CALC ===== */
+function renderItem(item, root) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.name = item.name.toLowerCase();
+  div.dataset.multiplier = Number(item.pack.multiplier) || 0;
+
+  div.innerHTML = `
+    <div class="row">
+      <div class="name">${item.name}</div>
+      <div class="inputs">
+        <input class="qty pack" type="number" min="0" step="1" placeholder="${item.pack.label || ''}">
+        <input class="qty open" type="number" min="0" step="0.001" placeholder="${item.base_unit}">
+      </div>
+    </div>
+    <div class="total">
+      Итого: <span>0.000</span> ${item.base_unit}
+    </div>
+  `;
+
+  div.querySelectorAll('input').forEach(i =>
+    i.addEventListener('input', () => update(div))
+  );
+
+  root.appendChild(div);
+}
+
 function update(div) {
   const k = Number(div.dataset.multiplier);
   const pack = Number(div.querySelector('.pack').value) || 0;
@@ -173,7 +109,6 @@ function update(div) {
   div.querySelector('span').textContent = (pack * k + open).toFixed(3);
 }
 
-/* ===== SEARCH ===== */
 document.getElementById('search').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
   document.querySelectorAll('.item').forEach(item => {
@@ -181,10 +116,8 @@ document.getElementById('search').addEventListener('input', e => {
   });
 });
 
-/* ===== COPY ===== */
 function copyToClipboard() {
   const result = [];
-
   document.querySelectorAll('.item').forEach(div => {
     const qty = Number(div.querySelector('span').textContent);
     if (qty > 0) {
@@ -196,7 +129,7 @@ function copyToClipboard() {
   });
 
   navigator.clipboard.writeText(JSON.stringify(result, null, 2));
-  alert('Скопировано в буфер обмена');
+  alert('Скопировано');
 }
 </script>
 
