@@ -1,46 +1,74 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import asyncio
 import json
 import os
-from io import BytesIO
+import re
+from datetime import datetime
 
 import pandas as pd
-import requests
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import (
     Message,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     WebAppInfo,
-    BufferedInputFile,
+    FSInputFile,
 )
-
-# ================= НАСТРОЙКИ =================
 
 BOT_TOKEN = "8484694104:AAGa2jPVYGfFec03eQ36hv758gvn9Wumj0k"
 
 WEBAPP_URL = "https://melonic116-png.github.io/ostatki-web/form.html"
 
-RENDER_API_URL = "https://ТВОЙ-RENDER.onrender.com"
+WORK_FILE = "ostatki_current.xlsx"
+BACKUP_DIR = "backups"
 
-# =============================================
+os.makedirs(BACKUP_DIR, exist_ok=True)
 
 storage = MemoryStorage()
-
 bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
 )
-
 dp = Dispatcher(storage=storage)
 
 
-# ================= START =================
+class Finish(StatesGroup):
+    waiting_name = State()
+
+
+def ensure_excel():
+    if not os.path.exists(WORK_FILE):
+        pd.DataFrame(
+            columns=["Наименование", "Кол-во"]
+        ).to_excel(WORK_FILE, index=False)
+
+
+def apply_items(items: list[dict]):
+    ensure_excel()
+    df = pd.read_excel(WORK_FILE)
+
+    for it in items:
+        name = str(it.get("name", "")).strip()
+        qty = it.get("qty", 0)
+
+        if not name:
+            continue
+
+        mask = df["Наименование"].astype(str).str.lower() == name.lower()
+        if mask.any():
+            df.loc[mask, "Кол-во"] = qty
+        else:
+            df.loc[len(df)] = [name, qty]
+
+    df.to_excel(WORK_FILE, index=False)
+
 
 @dp.message(Command("start"))
 async def start(message: Message):
@@ -63,64 +91,55 @@ async def start(message: Message):
 
     await message.answer(
         "Выбери раздел для инвентаризации 👇\n\n"
-        "После сохранения Excel придёт автоматически.",
+        "1️⃣ Заполни форму\n"
+        "2️⃣ Нажми «Готово»\n"
+        "3️⃣ Вставь JSON сюда\n"
+        "4️⃣ Напиши <b>готово</b>",
         reply_markup=kb,
     )
 
 
-# ================= WEB APP HANDLER =================
+@dp.message(StateFilter(None))
+async def collect(message: Message, state: FSMContext):
+    text = (message.text or "").strip()
 
-@dp.message(lambda m: m.web_app_data is not None)
-async def handle_webapp(message: Message):
+    if text.lower() == "готово":
+        await message.answer("📁 Как назвать файл?")
+        await state.set_state(Finish.waiting_name)
+        return
+
     try:
-        payload = json.loads(message.web_app_data.data)
+        items = json.loads(text)
+        if not isinstance(items, list):
+            return
     except Exception:
-        await message.answer("❌ Ошибка данных")
         return
 
-    if payload.get("action") != "export_excel":
-        return
+    apply_items(items)
+    await message.answer(f"✅ Принято {len(items)} позиций")
 
-    group = payload.get("group")
-    user_id = message.from_user.id
 
-    try:
-        response = requests.get(
-            f"{RENDER_API_URL}/data",
-            params={"user_id": user_id, "group": group},
-            timeout=20
-        )
-        response.raise_for_status()
-    except Exception as e:
-        await message.answer("❌ Ошибка получения данных с сервера")
-        return
+@dp.message(StateFilter(Finish.waiting_name))
+async def finish(message: Message, state: FSMContext):
+    name_raw = message.text or "ostatki"
+    safe = re.sub(r'[\\/*?:"<>|]', "_", name_raw)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    data = response.json()
-
-    if not isinstance(data, list) or not data:
-        await message.answer("⚠ Нет данных для выгрузки")
-        return
-
-    df = pd.DataFrame(data)
-
-    buffer = BytesIO()
-    df.to_excel(buffer, index=False)
-    buffer.seek(0)
-
-    file_bytes = buffer.getvalue()
+    ensure_excel()
+    path = os.path.join(BACKUP_DIR, f"{safe}_{ts}.xlsx")
+    pd.read_excel(WORK_FILE).to_excel(path, index=False)
 
     await message.answer_document(
-        BufferedInputFile(
-            file_bytes,
-            filename=f"{group}_ostatki.xlsx"
-        ),
-        caption="✅ Excel сформирован автоматически"
+        FSInputFile(path),
+        caption=f"✅ Файл сохранён: <b>{safe}</b>",
     )
 
+    os.remove(WORK_FILE)
+    await state.clear()
 
-# ================= MAIN =================
 
 async def main():
+    ensure_excel()
     print("🚀 Бот запущен")
     await dp.start_polling(bot)
 
